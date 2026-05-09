@@ -8,9 +8,12 @@ export default function ConfirmPage() {
 
   const recipient = params.get("recipient");
   const amount = params.get("amount");
+  const purpose = params.get("purpose");
 
   const handleSend = () => {
-    router.push(`/sending?recipient=${recipient}&amount=${amount}`);
+    router.push(
+      `/sending?recipient=${recipient}&amount=${amount}&purpose=${purpose}`
+    );
   };
 
   return (
@@ -22,7 +25,9 @@ export default function ConfirmPage() {
           Sending <span className="text-white font-medium">${amount}</span> to
         </p>
 
-        <p className="text-white text-lg">{recipient}</p>
+        <p className="text-white text-lg break-all">{recipient}</p>
+
+        <p className="text-sm text-gray-500">Purpose: {purpose}</p>
 
         <button
           onClick={handleSend}

@@ -6,10 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function SendingPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const hasSent = useRef(false);
 
   const recipient = params.get("recipient");
   const amount = params.get("amount");
+  const purpose = params.get("purpose");
+
+  const hasSent = useRef(false);
 
   useEffect(() => {
     if (hasSent.current) return;
@@ -21,26 +23,36 @@ export default function SendingPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ recipient, amount }),
+        body: JSON.stringify({
+          recipient,
+          amount,
+        }),
       });
 
       const data = await res.json();
 
       if (data.success) {
         router.push(
-          `/delivered?recipient=${recipient}&amount=${amount}&receipt=${data.receiptId}`
+          `/delivered?recipient=${recipient}&amount=${amount}&purpose=${purpose}&receipt=${data.receiptId}`
         );
       }
     };
 
     sendPayment();
-  }, [router, recipient, amount]);
+  }, [router, recipient, amount, purpose]);
 
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="text-center space-y-4">
         <p className="text-lg">Sending...</p>
-        <p className="text-gray-500 text-sm">Securing receipt</p>
+
+        <p className="text-gray-500 text-sm">
+          Securing receipt on Solana Devnet
+        </p>
+
+        <p className="text-xs text-gray-600">
+          Purpose: {purpose}
+        </p>
       </div>
     </main>
   );

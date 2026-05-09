@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SendingPage() {
@@ -12,29 +12,43 @@ export default function SendingPage() {
   const purpose = params.get("purpose");
 
   const hasSent = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasSent.current) return;
     hasSent.current = true;
 
     const sendPayment = async () => {
-      const res = await fetch("/api/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipient,
-          amount,
-        }),
-      });
+      try {
+        const res = await fetch("/api/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipient,
+            amount,
+          }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (data.success) {
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Payment could not be completed.");
+        }
+
         router.push(
-          `/delivered?recipient=${recipient}&amount=${amount}&purpose=${purpose}&receipt=${data.receiptId}`
+          `/delivered?recipient=${encodeURIComponent(
+            recipient || ""
+          )}&amount=${encodeURIComponent(
+            amount || ""
+          )}&purpose=${encodeURIComponent(
+            purpose || ""
+          )}&receipt=${encodeURIComponent(data.receiptId || "")}`
         );
+      } catch (err) {
+        console.error("Send failed:", err);
+        setError("Payment could not be completed. Please try again.");
       }
     };
 
@@ -42,18 +56,77 @@ export default function SendingPage() {
   }, [router, recipient, amount, purpose]);
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <p className="text-lg">Sending...</p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_35%),#000] text-white flex items-center justify-center px-6">
+      <section className="w-full max-w-md text-center space-y-8">
+        {!error ? (
+          <>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/5 shadow-[0_0_50px_rgba(34,211,238,0.16)]">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-cyan-300/70 shadow-[0_0_35px_rgba(34,211,238,0.35)]" />
+            </div>
 
-        <p className="text-gray-500 text-sm">
-          Securing receipt on Solana Devnet
-        </p>
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
+                Processing
+              </p>
 
-        <p className="text-xs text-gray-600">
-          Purpose: {purpose}
-        </p>
-      </div>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Sending payment
+              </h1>
+
+              <p className="text-gray-400 leading-relaxed">
+                ZephiPay is routing your payment and securing a receipt on
+                Solana devnet.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left space-y-3 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-medium">${amount || "0.00"}</span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Purpose</span>
+                <span className="font-medium">{purpose || "General"}</span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Status</span>
+                <span className="font-medium text-cyan-300">Securing</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Please keep this window open while your receipt is generated.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-red-400/20 bg-red-400/5">
+              <span className="text-3xl">!</span>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35em] text-red-300/70">
+                Interrupted
+              </p>
+
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Payment not completed
+              </h1>
+
+              <p className="text-gray-400 leading-relaxed">{error}</p>
+            </div>
+
+            <button
+              onClick={() => router.push("/send")}
+              className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
+            >
+              Return to Send
+            </button>
+          </>
+        )}
+      </section>
     </main>
   );
 }

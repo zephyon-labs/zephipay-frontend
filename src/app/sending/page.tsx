@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SendingPage() {
+function SendingContent() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -128,5 +128,19 @@ export default function SendingPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function SendingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-black text-white flex items-center justify-center">
+          Preparing payment...
+        </main>
+      }
+    >
+      <SendingContent />
+    </Suspense>
   );
 }

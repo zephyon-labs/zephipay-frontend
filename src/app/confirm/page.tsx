@@ -1,8 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ConfirmPage() {
+function ConfirmContent() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -44,23 +45,17 @@ export default function ConfirmPage() {
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 space-y-5 shadow-[0_0_50px_rgba(34,211,238,0.06)]">
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">Amount</span>
-            <span className="font-medium text-xl">
-              ${amount || "0.00"}
-            </span>
+            <span className="font-medium text-xl">${amount || "0.00"}</span>
           </div>
 
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">Purpose</span>
-            <span className="font-medium">
-              {purpose || "General"}
-            </span>
+            <span className="font-medium">{purpose || "General"}</span>
           </div>
 
           <div className="border-t border-white/10 pt-5 space-y-3">
             <div>
-              <p className="text-sm text-gray-500">
-                Recipient
-              </p>
+              <p className="text-sm text-gray-500">Recipient</p>
 
               <p className="mt-1 font-mono text-sm text-gray-300 break-all">
                 {shortRecipient}
@@ -68,9 +63,7 @@ export default function ConfirmPage() {
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">
-                Settlement
-              </p>
+              <p className="text-sm text-gray-500">Settlement</p>
 
               <p className="mt-1 text-sm text-cyan-300">
                 Solana devnet · Receipt-backed
@@ -100,5 +93,19 @@ export default function ConfirmPage() {
         </p>
       </section>
     </main>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-black text-white flex items-center justify-center">
+          Loading confirmation...
+        </main>
+      }
+    >
+      <ConfirmContent />
+    </Suspense>
   );
 }

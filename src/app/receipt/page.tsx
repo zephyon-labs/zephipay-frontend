@@ -1,8 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ReceiptPage() {
+function ReceiptContent() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -90,5 +91,19 @@ export default function ReceiptPage() {
         </p>
       </section>
     </main>
+  );
+}
+
+export default function ReceiptPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-black text-white flex items-center justify-center">
+          Loading receipt...
+        </main>
+      }
+    >
+      <ReceiptContent />
+    </Suspense>
   );
 }

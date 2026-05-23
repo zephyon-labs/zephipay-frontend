@@ -56,7 +56,7 @@ export default function SendingPage() {
   }, [router, recipient, amount, purpose]);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_35%),#000] text-white flex items-center justify-center px-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_center,rgba(34,211,238,0.10),transparent_30%),radial-gradient(circle_at_bottom_center,rgba(168,85,247,0.05),transparent_40%),#000] text-white flex items-center justify-center px-6">
       <section className="w-full max-w-md text-center space-y-8">
         {!error ? (
           <>

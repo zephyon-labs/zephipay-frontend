@@ -18,7 +18,7 @@ export default function DeliveredPage() {
   )}&receipt=${encodeURIComponent(receipt || "")}`;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_35%),#000] text-white flex items-center justify-center px-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_center,rgba(34,211,238,0.10),transparent_30%),radial-gradient(circle_at_bottom_center,rgba(168,85,247,0.05),transparent_40%),#000] text-white flex items-center justify-center px-6">
       <section className="w-full max-w-md text-center space-y-8">
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/5 shadow-[0_0_70px_rgba(34,211,238,0.18)]">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-300 text-black shadow-[0_0_40px_rgba(34,211,238,0.4)]">

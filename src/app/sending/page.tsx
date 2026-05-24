@@ -20,7 +20,9 @@ function SendingContent() {
 
     const sendPayment = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/send", {
+        const res = await fetch(
+  "https://zephipay-backend-production.up.railway.app/api/send",
+  {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

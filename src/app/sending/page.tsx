@@ -20,7 +20,7 @@ function SendingContent() {
 
     const sendPayment = async () => {
       try {
-        const res = await fetch("/api/send", {
+        const res = await fetch("http://localhost:3001/api/send", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -28,12 +28,13 @@ function SendingContent() {
           body: JSON.stringify({
             recipient,
             amount,
+            purpose,
           }),
         });
 
         const data = await res.json();
 
-        if (!res.ok || !data.success) {
+        if (!res.ok || !data.ok) {
           throw new Error(data.error || "Payment could not be completed.");
         }
 

@@ -3,13 +3,26 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+const BACKEND_URL = "https://zephipay-backend-production.up.railway.app/api/send";
+
+function getBackendValue(data: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
 function SendingContent() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const recipient = params.get("recipient");
-  const amount = params.get("amount");
-  const purpose = params.get("purpose");
+  const recipient = params.get("recipient") || "";
+  const amount = params.get("amount") || "";
+  const purpose = params.get("purpose") || "General";
 
   const hasSent = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,9 +33,11 @@ function SendingContent() {
 
     const sendPayment = async () => {
       try {
-        const res = await fetch(
-  "https://zephipay-backend-production.up.railway.app/api/send",
-  {
+        if (!recipient || !amount) {
+          throw new Error("Missing recipient or amount.");
+        }
+
+        const res = await fetch(BACKEND_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -40,14 +55,28 @@ function SendingContent() {
           throw new Error(data.error || "Payment could not be completed.");
         }
 
+        const receipt = getBackendValue(data, [
+          "receiptId",
+          "receipt",
+          "receiptPda",
+          "receiptPDA",
+        ]);
+
+        const signature = getBackendValue(data, [
+          "signature",
+          "txSignature",
+          "transactionSignature",
+          "tx",
+        ]);
+
         router.push(
           `/delivered?recipient=${encodeURIComponent(
-            recipient || ""
-          )}&amount=${encodeURIComponent(
-            amount || ""
-          )}&purpose=${encodeURIComponent(
-            purpose || ""
-          )}&receipt=${encodeURIComponent(data.receiptId || "")}`
+            recipient
+          )}&amount=${encodeURIComponent(amount)}&purpose=${encodeURIComponent(
+            purpose
+          )}&receipt=${encodeURIComponent(
+            receipt
+          )}&signature=${encodeURIComponent(signature)}`
         );
       } catch (err) {
         console.error("Send failed:", err);
@@ -77,7 +106,7 @@ function SendingContent() {
               </h1>
 
               <p className="text-gray-400 leading-relaxed">
-                ZephiPay is routing your payment and securing a receipt on
+                ZephyPay is routing your payment and securing a receipt on
                 Solana devnet.
               </p>
             </div>
@@ -90,12 +119,16 @@ function SendingContent() {
 
               <div className="flex justify-between gap-4">
                 <span className="text-gray-500">Purpose</span>
-                <span className="font-medium">{purpose || "General"}</span>
+                <span className="font-medium text-right">
+                  {purpose || "General"}
+                </span>
               </div>
 
               <div className="flex justify-between gap-4">
                 <span className="text-gray-500">Status</span>
-                <span className="font-medium text-cyan-300">Securing</span>
+                <span className="font-medium text-cyan-300">
+                  Securing receipt
+                </span>
               </div>
             </div>
 
@@ -121,12 +154,21 @@ function SendingContent() {
               <p className="text-gray-400 leading-relaxed">{error}</p>
             </div>
 
-            <button
-              onClick={() => router.push("/send")}
-              className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
-            >
-              Return to Send
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/send")}
+                className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
+              >
+                Return to Send
+              </button>
+
+              <button
+                onClick={() => router.push("/")}
+                className="w-full rounded-2xl border border-white/15 px-6 py-4 font-semibold text-white transition hover:bg-white/10"
+              >
+                Back Home
+              </button>
+            </div>
           </>
         )}
       </section>

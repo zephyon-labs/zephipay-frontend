@@ -1,24 +1,31 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+function shorten(value: string | null, front = 6, back = 6) {
+  if (!value) return "Unavailable";
+  if (value.length <= front + back) return value;
+  return `${value.slice(0, front)}...${value.slice(-back)}`;
+}
 
 function ReceiptContent() {
   const params = useSearchParams();
   const router = useRouter();
 
-  const recipient = params.get("recipient");
-  const amount = params.get("amount");
-  const purpose = params.get("purpose");
-  const receipt = params.get("receipt");
+  const recipient = params.get("recipient") || "";
+  const amount = params.get("amount") || "0.00";
+  const purpose = params.get("purpose") || "General";
+  const receipt = params.get("receipt") || "";
+  const signature = params.get("signature") || params.get("tx") || "";
 
-  const shortReceipt = receipt
-    ? `${receipt.slice(0, 6)}...${receipt.slice(-6)}`
-    : "Unavailable";
+  const receiptDisplay = receipt
+    ? `ZP-${receipt.slice(0, 6).toUpperCase()}`
+    : "ZP-PENDING";
 
-  const shortRecipient = recipient
-    ? `${recipient.slice(0, 6)}...${recipient.slice(-6)}`
-    : "Unknown";
+  const explorerUrl = signature
+    ? `https://explorer.solana.com/tx/${signature}?cluster=devnet`
+    : "";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_center,rgba(34,211,238,0.10),transparent_30%),radial-gradient(circle_at_bottom_center,rgba(168,85,247,0.05),transparent_40%),#000] text-white flex items-center justify-center px-6">
@@ -32,57 +39,83 @@ function ReceiptContent() {
             Payment Receipt
           </h1>
 
-          <p className="text-gray-400">
-            Your payment was completed and recorded with a deterministic receipt.
+          <p className="text-gray-400 leading-relaxed">
+            This receipt represents a completed devnet payment routed through
+            ZephyPay and recorded through Zephyon Protocol.
           </p>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 space-y-5 shadow-[0_0_50px_rgba(34,211,238,0.08)]">
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">Status</span>
-            <span className="text-cyan-300 font-medium">Delivered</span>
+            <span className="text-cyan-300 font-medium">Confirmed</span>
           </div>
 
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">Amount</span>
-            <span className="font-medium">${amount || "0.00"}</span>
+            <span className="font-medium">${amount}</span>
           </div>
 
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">Purpose</span>
-            <span className="font-medium">{purpose || "General"}</span>
+            <span className="font-medium text-right">{purpose}</span>
           </div>
 
           <div className="border-t border-white/10 pt-5 space-y-4">
             <div>
               <p className="text-sm text-gray-500">Recipient</p>
-              <p className="mt-1 font-mono text-sm text-gray-300">
-                {shortRecipient}
+              <p className="mt-1 font-mono text-sm text-gray-300 break-all">
+                {shorten(recipient)}
               </p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Receipt ID</p>
-              <p className="mt-1 font-mono text-sm text-cyan-300">
-                {shortReceipt}
+              <p className="mt-1 font-mono text-sm text-cyan-300 break-all">
+                {receiptDisplay}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Receipt PDA</p>
+              <p className="mt-1 font-mono text-xs text-gray-400 break-all">
+                {shorten(receipt, 8, 8)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Transaction Signature</p>
+              <p className="mt-1 font-mono text-xs text-gray-400 break-all">
+                {shorten(signature, 8, 8)}
               </p>
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <button
-            onClick={() => router.push("/")}
-            className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]"
-          >
-            Back Home
-          </button>
+          {explorerUrl && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full rounded-2xl bg-white px-6 py-4 text-center font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]"
+            >
+              View on Solana Explorer
+            </a>
+          )}
 
           <button
             onClick={() => router.push("/send")}
             className="w-full rounded-2xl border border-white/15 px-6 py-4 font-semibold text-white transition hover:bg-white/10"
           >
             Send Another Payment
+          </button>
+
+          <button
+            onClick={() => router.push("/")}
+            className="w-full rounded-2xl px-6 py-3 text-sm font-medium text-gray-500 transition hover:text-white"
+          >
+            Back Home
           </button>
         </div>
 

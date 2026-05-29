@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { useState } from "react";
 
+type PhantomProvider = {
+  isPhantom?: boolean;
+  connect: () => Promise<{
+    publicKey: {
+      toString: () => string;
+    };
+  }>;
+};
+
 declare global {
   interface Window {
     phantom?: {
-      solana?: {
-        isPhantom?: boolean;
-        connect: () => Promise<{
-          publicKey: {
-            toString(): string;
-          };
-        }>;
-      };
+      solana?: PhantomProvider;
     };
+    solana?: PhantomProvider;
   }
 }
 
@@ -23,21 +26,21 @@ export default function Home() {
 
   const connectPhantom = async () => {
     try {
-      const provider = window?.phantom?.solana;
+      const provider = window.phantom?.solana || window.solana;
 
-      if (!provider?.isPhantom) {
-        window.open("https://phantom.app/", "_blank");
+      console.log("Provider found:", provider);
+
+      if (!provider) {
+        alert("Phantom Wallet not detected.");
         return;
       }
 
       const response = await provider.connect();
+      const publicKey = response.publicKey.toString();
 
-      setWalletAddress(response.publicKey.toString());
+      console.log("Connected wallet:", publicKey);
 
-      console.log(
-        "Connected:",
-        response.publicKey.toString()
-      );
+      setWalletAddress(publicKey);
     } catch (error) {
       console.error("Phantom connection failed:", error);
     }
@@ -108,9 +111,7 @@ export default function Home() {
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
               Speed
             </p>
-            <h3 className="mt-3 text-xl font-semibold">
-              Fast settlement
-            </h3>
+            <h3 className="mt-3 text-xl font-semibold">Fast settlement</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               Solana-native transfers with near-instant confirmation.
             </p>

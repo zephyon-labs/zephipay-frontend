@@ -1,9 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useState } from "react";
+
+declare global {
+  interface Window {
+    phantom?: {
+      solana?: {
+        isPhantom?: boolean;
+        connect: () => Promise<{
+          publicKey: {
+            toString(): string;
+          };
+        }>;
+      };
+    };
+  }
+}
 
 export default function Home() {
+  const [walletAddress, setWalletAddress] = useState("");
+
+  const connectPhantom = async () => {
+    try {
+      const provider = window?.phantom?.solana;
+
+      if (!provider?.isPhantom) {
+        window.open("https://phantom.app/", "_blank");
+        return;
+      }
+
+      const response = await provider.connect();
+
+      setWalletAddress(response.publicKey.toString());
+
+      console.log(
+        "Connected:",
+        response.publicKey.toString()
+      );
+    } catch (error) {
+      console.error("Phantom connection failed:", error);
+    }
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
       {/* Background */}
@@ -50,7 +89,14 @@ export default function Home() {
             View Receipt
           </Link>
 
-          <WalletMultiButton className="!h-[56px] !rounded-2xl !bg-violet-600 !px-7 !text-sm !font-semibold hover:!bg-violet-500" />
+          <button
+            onClick={connectPhantom}
+            className="flex h-[56px] items-center justify-center rounded-2xl bg-violet-600 px-9 text-sm font-semibold text-white transition duration-300 hover:bg-violet-500"
+          >
+            {walletAddress
+              ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
+              : "Connect Phantom"}
+          </button>
         </div>
 
         {/* Feature Cards */}
@@ -62,7 +108,9 @@ export default function Home() {
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
               Speed
             </p>
-            <h3 className="mt-3 text-xl font-semibold">Fast settlement</h3>
+            <h3 className="mt-3 text-xl font-semibold">
+              Fast settlement
+            </h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               Solana-native transfers with near-instant confirmation.
             </p>
@@ -90,7 +138,9 @@ export default function Home() {
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
               Experience
             </p>
-            <h3 className="mt-3 text-xl font-semibold">Crypto stays invisible</h3>
+            <h3 className="mt-3 text-xl font-semibold">
+              Crypto stays invisible
+            </h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               A clean payment experience with blockchain rails underneath.
             </p>
@@ -110,10 +160,12 @@ export default function Home() {
                 <p className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">
                   {label}
                 </p>
+
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <span className="text-sm font-medium text-zinc-200">
                     {value}
                   </span>
+
                   <div className="h-2 w-2 rounded-full bg-emerald-400/80" />
                 </div>
               </div>

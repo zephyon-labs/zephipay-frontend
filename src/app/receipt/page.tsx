@@ -41,7 +41,7 @@ function ReceiptContent() {
 
           <p className="text-gray-400 leading-relaxed">
             This receipt represents a completed devnet payment routed through
-            ZephyPay and recorded through Zephyon Protocol.
+            ZephiPay and recorded through Zephyon Protocol.
           </p>
         </div>
 
@@ -84,7 +84,9 @@ function ReceiptContent() {
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">Transaction Signature</p>
+              <p className="text-sm text-gray-500">
+                Transaction Signature
+              </p>
               <p className="mt-1 font-mono text-xs text-gray-400 break-all">
                 {shorten(signature, 8, 8)}
               </p>

@@ -88,89 +88,99 @@ function SendingContent() {
   }, [router, recipient, amount, purpose]);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_center,rgba(34,211,238,0.10),transparent_30%),radial-gradient(circle_at_bottom_center,rgba(168,85,247,0.05),transparent_40%),#000] text-white flex items-center justify-center px-6">
-      <section className="w-full max-w-md text-center space-y-8">
-        {!error ? (
-          <>
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/5 shadow-[0_0_50px_rgba(34,211,238,0.16)]">
-              <div className="h-10 w-10 animate-pulse rounded-full bg-cyan-300/70 shadow-[0_0_35px_rgba(34,211,238,0.35)]" />
-            </div>
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-[-18rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[170px]" />
+        <div className="absolute bottom-[-22rem] left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-fuchsia-700/8 blur-[190px]" />
+        <div className="absolute bottom-[-22rem] right-[-12rem] h-[34rem] w-[34rem] rounded-full bg-indigo-700/8 blur-[190px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025),transparent_40%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/80 to-black" />
+      </div>
 
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
-                Processing
-              </p>
-
-              <h1 className="text-3xl font-semibold tracking-tight">
-                Sending payment
-              </h1>
-
-              <p className="text-gray-400 leading-relaxed">
-                ZephyPay is routing your payment and securing a receipt on
-                Solana devnet.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left space-y-3 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500">Amount</span>
-                <span className="font-medium">${amount || "0.00"}</span>
+      <section className="relative z-10 flex min-h-screen items-center justify-center px-6 py-10">
+        <div className="w-full max-w-md space-y-8 text-center">
+          {!error ? (
+            <>
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/5 shadow-[0_0_50px_rgba(34,211,238,0.16)]">
+                <div className="h-10 w-10 animate-pulse rounded-full bg-cyan-300/70 shadow-[0_0_35px_rgba(34,211,238,0.35)]" />
               </div>
 
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500">Purpose</span>
-                <span className="font-medium text-right">
-                  {purpose || "General"}
-                </span>
+              <div className="space-y-3">
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
+                  Processing
+                </p>
+
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  Sending payment
+                </h1>
+
+                <p className="leading-relaxed text-zinc-400">
+                  ZephiPay is routing your payment and securing a receipt on
+                  Solana devnet.
+                </p>
               </div>
 
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500">Status</span>
-                <span className="font-medium text-cyan-300">
-                  Securing receipt
-                </span>
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left shadow-[0_0_40px_rgba(34,211,238,0.06)] backdrop-blur-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-zinc-500">Amount</span>
+                  <span className="font-medium">${amount || "0.00"}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <span className="text-zinc-500">Purpose</span>
+                  <span className="text-right font-medium">
+                    {purpose || "General"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <span className="text-zinc-500">Status</span>
+                  <span className="font-medium text-cyan-300">
+                    Securing receipt
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <p className="text-xs text-gray-600">
-              Please keep this window open while your receipt is generated.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-red-400/20 bg-red-400/5">
-              <span className="text-3xl">!</span>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35em] text-red-300/70">
-                Interrupted
+              <p className="text-xs text-zinc-600">
+                Please keep this window open while your receipt is generated.
               </p>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-red-400/20 bg-red-400/5">
+                <span className="text-3xl">!</span>
+              </div>
 
-              <h1 className="text-3xl font-semibold tracking-tight">
-                Payment not completed
-              </h1>
+              <div className="space-y-3">
+                <p className="text-sm uppercase tracking-[0.35em] text-red-300/70">
+                  Interrupted
+                </p>
 
-              <p className="text-gray-400 leading-relaxed">{error}</p>
-            </div>
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  Payment not completed
+                </h1>
 
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push("/send")}
-                className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
-              >
-                Return to Send
-              </button>
+                <p className="leading-relaxed text-zinc-400">{error}</p>
+              </div>
 
-              <button
-                onClick={() => router.push("/")}
-                className="w-full rounded-2xl border border-white/15 px-6 py-4 font-semibold text-white transition hover:bg-white/10"
-              >
-                Back Home
-              </button>
-            </div>
-          </>
-        )}
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.push("/send")}
+                  className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
+                >
+                  Return to Send
+                </button>
+
+                <button
+                  onClick={() => router.push("/")}
+                  className="w-full rounded-2xl border border-white/15 px-6 py-4 font-semibold text-white transition hover:bg-white/10"
+                >
+                  Back Home
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </section>
     </main>
   );
@@ -180,7 +190,7 @@ export default function SendingPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <main className="flex min-h-screen items-center justify-center bg-black text-white">
           Preparing payment...
         </main>
       }

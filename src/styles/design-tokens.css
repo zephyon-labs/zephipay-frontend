@@ -1,0 +1,39 @@
+:root {
+  /* Foundations */
+  --zp-bg: #05070a;
+  --zp-surface: #0d1117;
+  --zp-surface-elevated: #141922;
+
+  /* Text */
+  --zp-text: #f8fafc;
+  --zp-text-muted: #94a3b8;
+  --zp-text-subtle: #64748b;
+
+  /* Brand */
+  --zp-cyan: #63e6ff;
+  --zp-cyan-soft: #2dd4f5;
+  --zp-gold: #f5c451;
+
+  /* Status */
+  --zp-success: #32d583;
+  --zp-warning: #fdb022;
+  --zp-danger: #f04438;
+
+  /* Glass */
+  --zp-glass: rgba(255,255,255,0.04);
+  --zp-glass-border: rgba(255,255,255,0.08);
+
+  /* Radius */
+  --zp-radius-sm: 16px;
+  --zp-radius-md: 22px;
+  --zp-radius-lg: 30px;
+
+  /* Shadows */
+  --zp-shadow:
+    0 8px 40px rgba(0,0,0,.45);
+
+  /* Motion */
+  --zp-speed-fast: .18s;
+  --zp-speed: .30s;
+  --zp-speed-slow: .55s;
+}

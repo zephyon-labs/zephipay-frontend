@@ -1,11 +1,12 @@
-import { ArrowLeftRight, Compass, House, UserRound } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeftRight, House, UserRound, WalletCards } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { label: "Home", icon: House, active: true },
-  { label: "Payments", icon: ArrowLeftRight },
-  { label: "Discover", icon: Compass },
-  { label: "Profile", icon: UserRound },
+  { label: "Home", icon: House, href: "/" },
+  { label: "Wallet", icon: WalletCards, href: "/wallet" },
+  { label: "Activity", icon: ArrowLeftRight, href: "/activity" },
+  { label: "Profile", icon: UserRound, href: "/profile" },
 ];
 
 export function BottomNavigation() {
@@ -18,26 +19,16 @@ export function BottomNavigation() {
       )}
     >
       <div className="grid grid-cols-4">
-        {items.map(({ label, icon: Icon, active }) => (
-          <button
+        {items.map(({ label, icon: Icon, href }) => (
+          <Link
             key={label}
-            className="flex flex-col items-center gap-2 py-4 transition-colors"
+            href={href}
+            className="flex flex-col items-center gap-2 py-4 transition-colors hover:text-zp-cyan"
           >
-            <Icon
-              size={20}
-              className={active ? "text-zp-cyan" : "text-zp-subtle"}
-            />
+            <Icon size={20} className="text-zp-subtle" />
 
-            <span
-              className={
-                active
-                  ? "text-xs font-medium text-zp-cyan"
-                  : "text-xs text-zp-subtle"
-              }
-            >
-              {label}
-            </span>
-          </button>
+            <span className="text-xs text-zp-subtle">{label}</span>
+          </Link>
         ))}
       </div>
     </nav>

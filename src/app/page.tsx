@@ -8,16 +8,16 @@ import { HomeHeader } from "@/components/ui/home-header";
 import { IdentitySheet } from "@/components/ui/identity-sheet";
 import { QuickActions } from "@/components/ui/quick-actions";
 import { RecentActivity } from "@/components/ui/recent-activity";
-import { RuntimeStatusCard } from "@/components/ui/runtime-status-card";
 import { ZpProgressCard } from "@/components/ui/zp-progress-card";
 import { getProfileViewModel } from "@/view-models/profile";
-import { getRuntimeViewModel } from "@/view-models/runtime";
+import { SmartCard } from "@/components/ui/smart-card";
+import { getSmartCardViewModel } from "@/view-models/smart-card";
 
 export default function HomePage() {
   const [identityOpen, setIdentityOpen] = useState(false);
 
   const profile = getProfileViewModel();
-  const runtime = getRuntimeViewModel();
+  const smartCard = getSmartCardViewModel();
 
   return (
     <AppShell>
@@ -30,12 +30,11 @@ export default function HomePage() {
 
         <BalanceCard amount={profile.availableToday} />
 
-        <RuntimeStatusCard
-          name={runtime.name}
-          status={runtime.status}
-          updated={runtime.updated}
-          engines={runtime.engines}
-        />
+        <SmartCard
+  title={smartCard.title}
+  subtitle={smartCard.subtitle}
+  items={smartCard.items}
+/>
 
         <ZpProgressCard
           level={profile.level}

@@ -15,13 +15,18 @@ type IdentitySheetProps = {
   onClose?: () => void;
 };
 
-export function IdentitySheet({ open, onClose }: IdentitySheetProps) {
+export function IdentitySheet({
+  open,
+  onClose,
+}: IdentitySheetProps) {
   return (
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md"
+          <motion.button
+            type="button"
+            aria-label="Close profile"
+            className="fixed inset-0 z-40 cursor-default bg-black/70 backdrop-blur-md"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -30,6 +35,7 @@ export function IdentitySheet({ open, onClose }: IdentitySheetProps) {
           />
 
           <motion.aside
+            aria-label="Profile panel"
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[36px] border-t border-white/10 bg-zp-surface p-6 shadow-2xl"
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -54,7 +60,10 @@ export function IdentitySheet({ open, onClose }: IdentitySheetProps) {
                   </h2>
 
                   <div className="mt-1 flex items-center gap-2 text-sm text-zp-muted">
-                    <BadgeCheck size={16} className="text-zp-success" />
+                    <BadgeCheck
+                      size={16}
+                      className="text-zp-success"
+                    />
                     Verified
                   </div>
 
@@ -65,6 +74,8 @@ export function IdentitySheet({ open, onClose }: IdentitySheetProps) {
               </div>
 
               <button
+                type="button"
+                aria-label="Close profile"
                 onClick={onClose}
                 className="rounded-full p-2 text-zp-muted transition hover:text-zp-text"
               >
@@ -92,11 +103,22 @@ export function IdentitySheet({ open, onClose }: IdentitySheetProps) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-center">
-      <p className="text-xs text-zp-subtle">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-zp-text">{value}</p>
+      <p className="text-xs text-zp-subtle">
+        {label}
+      </p>
+
+      <p className="mt-2 text-lg font-semibold text-zp-text">
+        {value}
+      </p>
     </div>
   );
 }
@@ -109,9 +131,18 @@ function Action({
   label: string;
 }) {
   return (
-    <button className="flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 transition hover:border-zp-cyan/30">
-      <Icon size={18} className="text-zp-cyan" />
-      <span className="text-zp-text">{label}</span>
+    <button
+      type="button"
+      className="flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 transition hover:border-zp-cyan/30"
+    >
+      <Icon
+        size={18}
+        className="text-zp-cyan"
+      />
+
+      <span className="text-zp-text">
+        {label}
+      </span>
     </button>
   );
 }

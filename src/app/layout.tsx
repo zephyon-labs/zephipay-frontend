@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AccountProvider } from "@/state/account-provider";
 import ZephiWalletProvider from "./wallet-provider";
 import "./globals.css";
 
@@ -15,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ZephiPay",
-  description: "Simple, receipt-backed payments built on Solana.",
+  description:
+    "Simple, receipt-backed payments powered by Zephyon Protocol.",
 };
 
 export default function RootLayout({
@@ -28,8 +30,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ZephiWalletProvider>{children}</ZephiWalletProvider>
+      <body className="flex min-h-full flex-col">
+        <ZephiWalletProvider>
+          <AccountProvider>{children}</AccountProvider>
+        </ZephiWalletProvider>
       </body>
     </html>
   );

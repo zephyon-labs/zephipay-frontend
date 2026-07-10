@@ -8,16 +8,29 @@ import { HomeHeader } from "@/components/ui/home-header";
 import { IdentitySheet } from "@/components/ui/identity-sheet";
 import { QuickActions } from "@/components/ui/quick-actions";
 import { RecentActivity } from "@/components/ui/recent-activity";
-import { ZpProgressCard } from "@/components/ui/zp-progress-card";
-import { getProfileViewModel } from "@/view-models/profile";
 import { SmartCard } from "@/components/ui/smart-card";
+import { ZpProgressCard } from "@/components/ui/zp-progress-card";
+import { useAccount } from "@/state/account-provider";
+import { getProfileViewModel } from "@/view-models/profile";
 import { getSmartCardViewModel } from "@/view-models/smart-card";
+
+function formatUsd(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+}
 
 export default function HomePage() {
   const [identityOpen, setIdentityOpen] = useState(false);
 
+  const { account, isReady } = useAccount();
   const profile = getProfileViewModel();
   const smartCard = getSmartCardViewModel();
+
+  const availableBalance = isReady
+    ? formatUsd(account.balances.availableUsd)
+    : "$0.00";
 
   return (
     <AppShell>
@@ -28,20 +41,23 @@ export default function HomePage() {
           onProfileClick={() => setIdentityOpen(true)}
         />
 
-        <BalanceCard amount={profile.availableToday} />
+        <BalanceCard
+          amount={availableBalance}
+          sublabel="Account ready for testing."
+        />
 
         <SmartCard
-  title={smartCard.title}
-  subtitle={smartCard.subtitle}
-  items={smartCard.items}
-/>
+          title={smartCard.title}
+          subtitle={smartCard.subtitle}
+          items={smartCard.items}
+        />
 
         <ZpProgressCard
           level={profile.level}
           title={profile.levelTitle}
           points={profile.zp}
           progress={72}
-          nextLevelText="145 until Level 19"
+          nextLevelText="145 ZP until Level 19"
         />
 
         <QuickActions />

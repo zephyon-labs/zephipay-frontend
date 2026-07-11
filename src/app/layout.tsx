@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AccountProvider } from "@/state/account-provider";
+import { TransactionProvider } from "@/state/transaction-provider";
 import ZephiWalletProvider from "./wallet-provider";
 import "./globals.css";
 
@@ -32,7 +33,11 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <ZephiWalletProvider>
-          <AccountProvider>{children}</AccountProvider>
+          <AccountProvider>
+            <TransactionProvider>
+              {children}
+            </TransactionProvider>
+          </AccountProvider>
         </ZephiWalletProvider>
       </body>
     </html>

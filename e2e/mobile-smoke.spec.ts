@@ -91,3 +91,54 @@ test.describe("ZephiPay mobile experience", () => {
     await expect(profileSheet).not.toBeVisible();
   });
 });
+
+test("completed transaction appears in recent activity and survives refresh", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "zephipay-transaction-state-v1",
+      JSON.stringify({
+        transactions: [
+          {
+            id: "txn-e2e-001",
+            recipient:
+              "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgRhX",
+            amountUsd: 24.5,
+            purpose: "Personal",
+            direction: "sent",
+            status: "confirmed",
+            rail: "solana-devnet",
+            createdAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            receipt: {
+              id: "receipt-e2e-001",
+              receiptAddress: "receipt-address-e2e",
+              transactionSignature: "signature-e2e",
+              createdAt: new Date().toISOString(),
+            },
+          },
+        ],
+        activeTransactionId: "txn-e2e-001",
+      }),
+    );
+  });
+
+  await page.goto("/");
+
+  await expect(
+    page.getByText("Paid 7xKXtg...osgRhX"),
+  ).toBeVisible();
+
+  await expect(page.getByText("$24.50")).toBeVisible();
+  await expect(page.getByText("Today • Delivered")).toBeVisible();
+
+  await page.reload();
+
+  await expect(
+    page.getByText("Paid 7xKXtg...osgRhX"),
+  ).toBeVisible();
+
+  await expect(page.getByText("$24.50")).toBeVisible();
+});
+

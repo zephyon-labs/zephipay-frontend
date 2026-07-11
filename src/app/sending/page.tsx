@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAccount } from "@/state/account-provider";
+import { useTransactions } from "@/state/transaction-provider";
 
 const BACKEND_URL = "https://zephipay-backend-production.up.railway.app/api/send";
 
@@ -24,6 +26,9 @@ function SendingContent() {
   const amount = params.get("amount") || "";
   const purpose = params.get("purpose") || "General";
 
+  const { subtractFunds } = useAccount();
+  const { recordCompletedTransaction } = useTransactions();
+
   const hasSent = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +38,14 @@ function SendingContent() {
 
     const sendPayment = async () => {
       try {
-        if (!recipient || !amount) {
-          throw new Error("Missing recipient or amount.");
+        const numericAmount = Number(amount);
+
+        if (
+          !recipient ||
+          !Number.isFinite(numericAmount) ||
+          numericAmount <= 0
+        ) {
+          throw new Error("Missing or invalid payment details.");
         }
 
         const res = await fetch(BACKEND_URL, {
@@ -69,8 +80,24 @@ function SendingContent() {
           "tx",
         ]);
 
+        const transaction = recordCompletedTransaction({
+          recipient,
+          amountUsd: numericAmount,
+          purpose,
+          receiptAddress: receipt,
+          transactionSignature: signature,
+          rail: "solana-devnet",
+        });
+
+        // Managed beta balances update when sufficient local funds exist.
+        // Connected-wallet Devnet payments are still recorded when the
+        // local prototype balance is zero.
+        subtractFunds(numericAmount);
+
         router.push(
-          `/delivered?recipient=${encodeURIComponent(
+          `/delivered?transactionId=${encodeURIComponent(
+            transaction.id
+          )}&recipient=${encodeURIComponent(
             recipient
           )}&amount=${encodeURIComponent(amount)}&purpose=${encodeURIComponent(
             purpose
@@ -85,7 +112,14 @@ function SendingContent() {
     };
 
     sendPayment();
-  }, [router, recipient, amount, purpose]);
+  }, [
+    router,
+    recipient,
+    amount,
+    purpose,
+    recordCompletedTransaction,
+    subtractFunds,
+  ]);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">

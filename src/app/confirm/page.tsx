@@ -11,9 +11,17 @@ function ConfirmContent() {
   const amount = params.get("amount");
   const purpose = params.get("purpose");
 
-  const shortRecipient = recipient
-    ? `${recipient.slice(0, 6)}...${recipient.slice(-6)}`
-    : "Unknown";
+  const recipientDisplay = (() => {
+    if (!recipient) {
+      return "Unknown";
+    }
+
+    if (recipient.length <= 20) {
+      return recipient;
+    }
+
+    return `${recipient.slice(0, 8)}...${recipient.slice(-8)}`;
+  })();
 
   const handleSend = () => {
     router.push(
@@ -67,7 +75,7 @@ function ConfirmContent() {
                 <p className="text-sm text-zinc-500">Recipient</p>
 
                 <p className="mt-1 break-all font-mono text-sm text-zinc-300">
-                  {shortRecipient}
+                  {recipientDisplay}
                 </p>
               </div>
 

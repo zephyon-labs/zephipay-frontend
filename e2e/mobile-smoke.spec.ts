@@ -168,3 +168,28 @@ test("funding the beta account updates and persists the balance", async ({
   await expect(page.getByText("$25.00").first()).toBeVisible();
 });
 
+test("send form accepts a broad recipient and normalizes the amount", async ({
+  page,
+}) => {
+  await page.goto("/send");
+
+  await page
+    .getByLabel("Who are you paying?")
+    .fill("@zephdek");
+
+  await page.getByLabel("Amount").fill("12.5");
+
+  await page
+    .getByLabel("Payment purpose")
+    .selectOption("Personal");
+
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page).toHaveURL(
+    /\/confirm\?recipient=%40zephdek&amount=12\.50&purpose=Personal/,
+  );
+
+  await expect(page.getByText("$12.50")).toBeVisible();
+  await expect(page.getByText("@zephdek")).toBeVisible();
+});
+

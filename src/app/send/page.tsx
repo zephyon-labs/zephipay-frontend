@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PublicKey } from "@solana/web3.js";
 
 export default function SendPage() {
   const router = useRouter();
@@ -12,9 +11,10 @@ export default function SendPage() {
   const [purpose, setPurpose] = useState("Personal");
   const [error, setError] = useState("");
 
-  const handleContinue = () => {
+  function handleContinue() {
     const trimmedRecipient = recipient.trim();
     const trimmedAmount = amount.trim();
+    const numericAmount = Number(trimmedAmount);
 
     setError("");
 
@@ -23,25 +23,27 @@ export default function SendPage() {
       return;
     }
 
-    try {
-      new PublicKey(trimmedRecipient);
-    } catch {
-      setError("Please enter a valid Solana wallet address.");
+    if (trimmedRecipient.length < 3) {
+      setError("Please enter a valid recipient.");
+      return;
+    }
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("Please enter an amount greater than zero.");
       return;
     }
 
     router.push(
       `/confirm?recipient=${encodeURIComponent(
-        trimmedRecipient
+        trimmedRecipient,
       )}&amount=${encodeURIComponent(
-        trimmedAmount
-      )}&purpose=${encodeURIComponent(purpose)}`
+        numericAmount.toFixed(2),
+      )}&purpose=${encodeURIComponent(purpose)}`,
     );
-  };
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
-      {/* Background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-[-18rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[170px]" />
         <div className="absolute bottom-[-22rem] left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-fuchsia-700/8 blur-[190px]" />
@@ -52,57 +54,101 @@ export default function SendPage() {
 
       <section className="relative z-10 flex min-h-screen items-center justify-center px-6 py-10">
         <div className="w-full max-w-md space-y-8">
-          <div className="space-y-3 text-center">
+          <header className="space-y-3 text-center">
             <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
               Send Payment
             </p>
 
             <h1 className="text-4xl font-semibold tracking-tight">
-              Move money simply
+              Send money with confidence
             </h1>
 
             <p className="leading-relaxed text-zinc-400">
-              Fast, receipt-backed payments powered by Solana infrastructure.
+              Fast, secure payments with a Verified Receipt.
             </p>
-          </div>
+          </header>
 
           <div className="space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_0_50px_rgba(34,211,238,0.06)] backdrop-blur-sm">
             <div className="space-y-2">
-              <label className="text-sm text-zinc-500">Recipient</label>
+              <label
+                htmlFor="recipient"
+                className="text-sm text-zinc-500"
+              >
+                Who are you paying?
+              </label>
 
               <input
+                id="recipient"
+                name="recipient"
                 type="text"
-                placeholder="Enter a Solana wallet address"
+                autoComplete="off"
+                placeholder="Name, username, wallet, phone, or email"
                 value={recipient}
-                onChange={(e) => {
-                  setRecipient(e.target.value);
-                  if (error) setError("");
+                onChange={(event) => {
+                  setRecipient(event.target.value);
+
+                  if (error) {
+                    setError("");
+                  }
                 }}
                 className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-cyan-300/40 focus:shadow-[0_0_25px_rgba(34,211,238,0.12)]"
               />
+
+              <p className="text-xs leading-relaxed text-zinc-600">
+                Wallet addresses work in the current Devnet beta.
+                ZephiPay identity resolution is coming next.
+              </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-zinc-500">Amount (USD)</label>
+              <label
+                htmlFor="amount"
+                className="text-sm text-zinc-500"
+              >
+                Amount
+              </label>
 
-              <input
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (error) setError("");
-                }}
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-cyan-300/40 focus:shadow-[0_0_25px_rgba(34,211,238,0.12)]"
-              />
+              <div className="flex items-center rounded-2xl border border-white/10 bg-black/40 px-4 transition focus-within:border-cyan-300/40 focus-within:shadow-[0_0_25px_rgba(34,211,238,0.12)]">
+                <span className="text-zinc-500">$</span>
+
+                <input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  inputMode="decimal"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(event) => {
+                    setAmount(event.target.value);
+
+                    if (error) {
+                      setError("");
+                    }
+                  }}
+                  className="w-full bg-transparent px-2 py-4 text-white outline-none placeholder:text-zinc-600"
+                />
+
+                <span className="text-xs font-medium text-zinc-600">
+                  USD
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-zinc-500">Payment Purpose</label>
+              <label
+                htmlFor="payment-purpose"
+                className="text-sm text-zinc-500"
+              >
+                Payment purpose
+              </label>
 
               <select
+                id="payment-purpose"
+                name="payment-purpose"
                 value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
+                onChange={(event) => setPurpose(event.target.value)}
                 className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition focus:border-cyan-300/40 focus:shadow-[0_0_25px_rgba(34,211,238,0.12)]"
               >
                 <option>Personal</option>
@@ -115,12 +161,16 @@ export default function SendPage() {
           </div>
 
           {error && (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+            >
               {error}
             </div>
           )}
 
           <button
+            type="button"
             onClick={handleContinue}
             className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 hover:shadow-[0_0_35px_rgba(34,211,238,0.15)]"
           >
@@ -128,7 +178,7 @@ export default function SendPage() {
           </button>
 
           <p className="text-center text-xs text-zinc-600">
-            ZephiPay secures deterministic receipts through Zephyon Protocol.
+            Every completed payment includes a Verified Receipt.
           </p>
         </div>
       </section>

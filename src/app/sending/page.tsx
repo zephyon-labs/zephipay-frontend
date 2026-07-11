@@ -1,21 +1,60 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import {
+  isSimulationMode,
+  runtimeEnvironment,
+} from "@/lib/runtime-environment";
 import { useAccount } from "@/state/account-provider";
 import { useTransactions } from "@/state/transaction-provider";
 
-const BACKEND_URL = "https://zephipay-backend-production.up.railway.app/api/send";
+const BACKEND_URL =
+  "https://zephipay-backend-production.up.railway.app/api/send";
 
-function getBackendValue(data: Record<string, unknown>, keys: string[]) {
+function getBackendValue(
+  data: Record<string, unknown>,
+  keys: string[],
+) {
   for (const key of keys) {
     const value = data[key];
-    if (typeof value === "string" && value.length > 0) {
+
+    if (
+      typeof value === "string" &&
+      value.length > 0
+    ) {
       return value;
     }
   }
 
   return "";
+}
+
+function createSimulationIdentifier(prefix: string): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random()
+    .toString(16)
+    .slice(2)}`;
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
 }
 
 function SendingContent() {
@@ -26,17 +65,28 @@ function SendingContent() {
   const amount = params.get("amount") || "";
   const purpose = params.get("purpose") || "General";
 
-  const { subtractFunds } = useAccount();
-  const { recordCompletedTransaction } = useTransactions();
+  const {
+    account,
+    isReady: accountIsReady,
+    subtractFunds,
+  } = useAccount();
+
+  const { recordCompletedTransaction } =
+    useTransactions();
 
   const hasSent = useRef(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (hasSent.current) return;
+    if (!accountIsReady || hasSent.current) {
+      return;
+    }
+
     hasSent.current = true;
 
-    const sendPayment = async () => {
+    async function sendPayment() {
       try {
         const numericAmount = Number(amount);
 
@@ -45,25 +95,98 @@ function SendingContent() {
           !Number.isFinite(numericAmount) ||
           numericAmount <= 0
         ) {
-          throw new Error("Missing or invalid payment details.");
+          throw new Error(
+            "Missing or invalid payment details.",
+          );
         }
 
-        const res = await fetch(BACKEND_URL, {
+        if (isSimulationMode) {
+          if (
+            numericAmount >
+            account.balances.availableUsd
+          ) {
+            throw new Error(
+              `Insufficient test balance. You have $${account.balances.availableUsd.toFixed(
+                2,
+              )} available.`,
+            );
+          }
+
+          await wait(900);
+
+          const deducted =
+            subtractFunds(numericAmount);
+
+          if (!deducted) {
+            throw new Error(
+              "The test balance could not cover this payment.",
+            );
+          }
+
+          const receiptAddress =
+            createSimulationIdentifier(
+              "sim-receipt",
+            );
+
+          const transactionSignature =
+            createSimulationIdentifier(
+              "sim-transaction",
+            );
+
+          const transaction =
+            recordCompletedTransaction({
+              recipient,
+              amountUsd: numericAmount,
+              purpose,
+              receiptAddress,
+              transactionSignature,
+              rail: "prototype",
+            });
+
+          router.push(
+            `/delivered?mode=simulation&transactionId=${encodeURIComponent(
+              transaction.id,
+            )}&recipient=${encodeURIComponent(
+              recipient,
+            )}&amount=${encodeURIComponent(
+              numericAmount.toFixed(2),
+            )}&purpose=${encodeURIComponent(
+              purpose,
+            )}&receipt=${encodeURIComponent(
+              receiptAddress,
+            )}&signature=${encodeURIComponent(
+              transactionSignature,
+            )}`,
+          );
+
+          return;
+        }
+
+        const response = await fetch(BACKEND_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             recipient,
-            amount,
+            amount: numericAmount.toFixed(2),
             purpose,
+            environment: runtimeEnvironment,
           }),
         });
 
-        const data = await res.json();
+        const data =
+          (await response.json()) as Record<
+            string,
+            unknown
+          >;
 
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || "Payment could not be completed.");
+        if (!response.ok || data.ok !== true) {
+          throw new Error(
+            typeof data.error === "string"
+              ? data.error
+              : "Payment could not be completed.",
+          );
         }
 
         const receipt = getBackendValue(data, [
@@ -80,46 +203,73 @@ function SendingContent() {
           "tx",
         ]);
 
-        const transaction = recordCompletedTransaction({
-          recipient,
-          amountUsd: numericAmount,
-          purpose,
-          receiptAddress: receipt,
-          transactionSignature: signature,
-          rail: "solana-devnet",
-        });
+        const transaction =
+          recordCompletedTransaction({
+            recipient,
+            amountUsd: numericAmount,
+            purpose,
+            receiptAddress: receipt,
+            transactionSignature: signature,
+            rail:
+              runtimeEnvironment === "testnet"
+                ? "solana-testnet"
+                : runtimeEnvironment === "mainnet"
+                  ? "solana-mainnet"
+                  : "solana-devnet",
+          });
 
-        // Managed beta balances update when sufficient local funds exist.
-        // Connected-wallet Devnet payments are still recorded when the
-        // local prototype balance is zero.
         subtractFunds(numericAmount);
 
         router.push(
-          `/delivered?transactionId=${encodeURIComponent(
-            transaction.id
+          `/delivered?mode=${encodeURIComponent(
+            runtimeEnvironment,
+          )}&transactionId=${encodeURIComponent(
+            transaction.id,
           )}&recipient=${encodeURIComponent(
-            recipient
-          )}&amount=${encodeURIComponent(amount)}&purpose=${encodeURIComponent(
-            purpose
+            recipient,
+          )}&amount=${encodeURIComponent(
+            numericAmount.toFixed(2),
+          )}&purpose=${encodeURIComponent(
+            purpose,
           )}&receipt=${encodeURIComponent(
-            receipt
-          )}&signature=${encodeURIComponent(signature)}`
+            receipt,
+          )}&signature=${encodeURIComponent(
+            signature,
+          )}`,
         );
-      } catch (err) {
-        console.error("Send failed:", err);
-        setError("Payment could not be completed. Please try again.");
-      }
-    };
+      } catch (caughtError) {
+        console.error(
+          "Payment execution failed:",
+          caughtError,
+        );
 
-    sendPayment();
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Payment could not be completed. Please try again.",
+        );
+      }
+    }
+
+    void sendPayment();
   }, [
-    router,
-    recipient,
+    account.balances.availableUsd,
+    accountIsReady,
     amount,
     purpose,
+    recipient,
     recordCompletedTransaction,
+    router,
     subtractFunds,
   ]);
+
+  const processingDescription = isSimulationMode
+    ? "ZephiPay is executing your test payment and generating a Verified Receipt."
+    : "ZephiPay is securely routing your payment and generating a Verified Receipt.";
+
+  const statusLabel = isSimulationMode
+    ? "Executing simulation"
+    : "Securing settlement";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
@@ -149,34 +299,51 @@ function SendingContent() {
                 </h1>
 
                 <p className="leading-relaxed text-zinc-400">
-                  ZephiPay is routing your payment and securing a receipt on
-                  Solana devnet.
+                  {processingDescription}
                 </p>
               </div>
 
               <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left shadow-[0_0_40px_rgba(34,211,238,0.06)] backdrop-blur-sm">
                 <div className="flex justify-between gap-4">
-                  <span className="text-zinc-500">Amount</span>
-                  <span className="font-medium">${amount || "0.00"}</span>
-                </div>
-
-                <div className="flex justify-between gap-4">
-                  <span className="text-zinc-500">Purpose</span>
-                  <span className="text-right font-medium">
-                    {purpose || "General"}
+                  <span className="text-zinc-500">
+                    Amount
+                  </span>
+                  <span className="font-medium">
+                    ${amount || "0.00"}
                   </span>
                 </div>
 
                 <div className="flex justify-between gap-4">
-                  <span className="text-zinc-500">Status</span>
+                  <span className="text-zinc-500">
+                    Purpose
+                  </span>
+                  <span className="text-right font-medium">
+                    {purpose}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <span className="text-zinc-500">
+                    Mode
+                  </span>
+                  <span className="font-medium capitalize text-zinc-300">
+                    {runtimeEnvironment}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <span className="text-zinc-500">
+                    Status
+                  </span>
                   <span className="font-medium text-cyan-300">
-                    Securing receipt
+                    {statusLabel}
                   </span>
                 </div>
               </div>
 
               <p className="text-xs text-zinc-600">
-                Please keep this window open while your receipt is generated.
+                Please keep this window open while your
+                Verified Receipt is generated.
               </p>
             </>
           ) : (
@@ -194,18 +361,27 @@ function SendingContent() {
                   Payment not completed
                 </h1>
 
-                <p className="leading-relaxed text-zinc-400">{error}</p>
+                <p
+                  role="alert"
+                  className="leading-relaxed text-zinc-400"
+                >
+                  {error}
+                </p>
               </div>
 
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push("/send")}
+                  type="button"
+                  onClick={() =>
+                    router.push("/send")
+                  }
                   className="w-full rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] hover:opacity-90"
                 >
                   Return to Send
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => router.push("/")}
                   className="w-full rounded-2xl border border-white/15 px-6 py-4 font-semibold text-white transition hover:bg-white/10"
                 >

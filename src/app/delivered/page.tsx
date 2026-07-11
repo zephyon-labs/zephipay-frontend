@@ -13,19 +13,23 @@ function DeliveredContent() {
   const params = useSearchParams();
   const router = useRouter();
 
+  const mode = params.get("mode") || "devnet";
   const recipient = params.get("recipient") || "";
   const amount = params.get("amount") || "0.00";
   const purpose = params.get("purpose") || "General";
   const receipt = params.get("receipt") || "";
   const signature = params.get("signature") || params.get("tx") || "";
 
+  const isSimulation = mode === "simulation";
+
   const receiptDisplay = receipt
     ? `ZP-${receipt.slice(0, 6).toUpperCase()}`
     : "ZP-PENDING";
 
-  const explorerUrl = signature
-    ? `https://explorer.solana.com/tx/${signature}?cluster=devnet`
-    : "";
+  const explorerUrl =
+    signature && !isSimulation
+      ? `https://explorer.solana.com/tx/${signature}?cluster=${mode}`
+      : "";
 
   const receiptUrl = `/receipt?recipient=${encodeURIComponent(
     recipient
@@ -33,7 +37,7 @@ function DeliveredContent() {
     purpose
   )}&receipt=${encodeURIComponent(receipt)}&signature=${encodeURIComponent(
     signature
-  )}`;
+  )}&mode=${encodeURIComponent(mode)}`;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
@@ -63,8 +67,9 @@ function DeliveredContent() {
             </h1>
 
             <p className="leading-relaxed text-zinc-400">
-              Your payment was completed on Solana devnet and secured through
-              Zephyon Protocol receipt infrastructure.
+              {isSimulation
+                ? "Your test payment was completed and a Verified Receipt was generated."
+                : "Your payment was settled and a Verified Receipt was generated."}
             </p>
           </div>
 
@@ -87,7 +92,9 @@ function DeliveredContent() {
             </div>
 
             <div className="flex justify-between gap-4">
-              <span className="text-zinc-500">Transaction</span>
+              <span className="text-zinc-500">
+                {isSimulation ? "Simulation ID" : "Transaction"}
+              </span>
               <span className="text-right font-medium text-zinc-300">
                 {shorten(signature)}
               </span>
@@ -134,7 +141,9 @@ function DeliveredContent() {
           </div>
 
           <p className="text-xs text-zinc-600">
-            Powered by Solana devnet · Receipt-backed payment infrastructure
+            {isSimulation
+              ? "Simulation Mode · No real funds were moved"
+              : "Verified by Zephyon Protocol"}
           </p>
         </div>
       </section>

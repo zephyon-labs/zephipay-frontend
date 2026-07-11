@@ -13,19 +13,23 @@ function ReceiptContent() {
   const params = useSearchParams();
   const router = useRouter();
 
+  const mode = params.get("mode") || "devnet";
   const recipient = params.get("recipient") || "";
   const amount = params.get("amount") || "0.00";
   const purpose = params.get("purpose") || "General";
   const receipt = params.get("receipt") || "";
   const signature = params.get("signature") || params.get("tx") || "";
 
+  const isSimulation = mode === "simulation";
+
   const receiptDisplay = receipt
     ? `ZP-${receipt.slice(0, 6).toUpperCase()}`
     : "ZP-PENDING";
 
-  const explorerUrl = signature
-    ? `https://explorer.solana.com/tx/${signature}?cluster=devnet`
-    : "";
+  const explorerUrl =
+    signature && !isSimulation
+      ? `https://explorer.solana.com/tx/${signature}?cluster=${mode}`
+      : "";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
@@ -45,12 +49,13 @@ function ReceiptContent() {
             </p>
 
             <h1 className="text-4xl font-semibold tracking-tight">
-              Payment Receipt
+              Verified Receipt
             </h1>
 
             <p className="leading-relaxed text-zinc-400">
-              This receipt represents a completed devnet payment routed through
-              ZephiPay and recorded through Zephyon Protocol.
+              {isSimulation
+                ? "This Verified Receipt represents a completed beta simulation. No real funds were moved."
+                : "This Verified Receipt represents a completed payment recorded through Zephyon Protocol."}
             </p>
           </div>
 
@@ -131,7 +136,9 @@ function ReceiptContent() {
           </div>
 
           <p className="text-center text-xs text-zinc-600">
-            Powered by Zephyon Protocol · Solana devnet
+            {isSimulation
+              ? "ZephiPay Beta · Simulation Mode"
+              : "Verified by Zephyon Protocol"}
           </p>
         </div>
       </section>

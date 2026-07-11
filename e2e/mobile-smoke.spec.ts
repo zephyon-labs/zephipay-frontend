@@ -193,3 +193,82 @@ test("send form accepts a broad recipient and normalizes the amount", async ({
   await expect(page.getByText("@zephdek")).toBeVisible();
 });
 
+test("beta simulation completes the full payment loop", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Fund" }).click();
+  await page.getByRole("button", { name: "$25" }).click();
+  await page
+    .getByRole("button", { name: "Add Test Funds" })
+    .click();
+
+  await expect(page.getByText("$25.00").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Send" }).click();
+
+  await page
+    .getByLabel("Who are you paying?")
+    .fill("@nova");
+
+  await page.getByLabel("Amount").fill("10");
+
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page).toHaveURL(/\/confirm/);
+  await expect(page.getByText("@nova")).toBeVisible();
+  await expect(page.getByText("$10.00")).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Send Payment" })
+    .click();
+
+  await expect(page).toHaveURL(/\/delivered/, {
+    timeout: 10_000,
+  });
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Payment Delivered",
+    }),
+  ).toBeVisible();
+
+  await expect(
+    page.getByText(
+      "Simulation Mode · No real funds were moved",
+    ),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "View Receipt" })
+    .click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Verified Receipt",
+    }),
+  ).toBeVisible();
+
+  await expect(
+    page.getByText(
+      "No real funds were moved.",
+      { exact: false },
+    ),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Back Home" })
+    .click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("$15.00").first()).toBeVisible();
+  await expect(page.getByText("Paid @nova")).toBeVisible();
+  await expect(page.getByText("−$10.00")).toBeVisible();
+
+  await page.reload();
+
+  await expect(page.getByText("$15.00").first()).toBeVisible();
+  await expect(page.getByText("Paid @nova")).toBeVisible();
+});
+

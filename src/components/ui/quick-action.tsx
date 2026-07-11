@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type QuickActionProps = {
   label: string;
@@ -16,7 +16,9 @@ export function QuickAction({
 }: QuickActionProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-label={label}
       className={cn(
         "group flex flex-col items-center justify-center gap-3",
         "rounded-[24px]",
@@ -27,7 +29,7 @@ export function QuickAction({
         "transition-all duration-300",
         "hover:border-zp-cyan/40",
         "hover:bg-white/[0.05]",
-        className
+        className,
       )}
     >
       <Icon

@@ -142,3 +142,29 @@ test("completed transaction appears in recent activity and survives refresh", as
   await expect(page.getByText("$24.50")).toBeVisible();
 });
 
+test("funding the beta account updates and persists the balance", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Fund" }).click();
+
+  await expect(
+    page.getByRole("dialog", { name: "Fund Test Account" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "$25" }).click();
+  await page.getByRole("button", { name: "Add Test Funds" }).click();
+
+  await expect(page.getByText("$25.00").first()).toBeVisible();
+
+  await page.getByRole("link", { name: "Wallet" }).click();
+
+  await expect(page).toHaveURL(/\/wallet$/);
+  await expect(page.getByText("$25.00").first()).toBeVisible();
+
+  await page.reload();
+
+  await expect(page.getByText("$25.00").first()).toBeVisible();
+});
+
